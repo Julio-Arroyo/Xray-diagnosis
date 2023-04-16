@@ -21,5 +21,5 @@ if __name__ == "__main__":
         if idx >= NUM_IMAGES:
             break
 
-    with open("data/first10kimages.npy", "wb") as f:
+    with open("/groups/CS156b/2023/Xray-diagnosis/data/first10kimages.npy", "wb") as f:
         np.save(f, np.array(images))

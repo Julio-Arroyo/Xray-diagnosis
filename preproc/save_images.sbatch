@@ -2,11 +2,11 @@
 # Above line is required!
 
 # Name of job in SLURM queue
-#SBATCH --job-name=Example_Sbatch_job
+#SBATCH --job-name=ROSA_compile_dataset
 
 # Output and error log locations (captures stdout and stderr respectively). Defaults to your homedir.
-#SBATCH --output=/home/cwang7/%j.out
-#SBATCH --error=/home/cwang7/%j.err
+#SBATCH --output=/home/jarroyoi/%j.out
+#SBATCH --error=/home/jarroyoi/%j.err
 
 # Account to charge this computation time to. THIS LINE IS ESSENTIAL.
 #SBATCH -A CS156b
@@ -23,26 +23,17 @@
 #SBATCH --cpus-per-task=1
 
 # Total amount of system RAM for all tasks. Specify units with M and G. 
-#SBATCH --mem=32G
+#SBATCH --mem=1G
 
 # Request a single Tesla P100 GPU
 #SBATCH --gres=gpu:1
 
 # Send status emails to an email
-#SBATCH --mail-user=<your-email>@caltech.edu
+#SBATCH --mail-user=jarroyoi@caltech.edu
 
 # Enable email notifications for changes to the job state
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-# Load any modules you may need
-module load cuda/11.1
-module load gcc/11.2.0
-
-# Setup a python environment
-source /home/cwang7/venvs/cs156b/bin/activate
-
-# Do some cool things!
-cd /central/groups/CS156b/
-python my_cool_script.py
+python3 /groups/CS156b/2023/Xray-diagnosis/preproc/save_images.py
