@@ -1,11 +1,11 @@
 from torchvision.io import read_image
-from torchvision.models import resnet50, ResNet50Weights
+from torchvision.models import resnet50, ResNet50_Weights
 
 if __name__ == "__main__":
-    img = read_image("/groups/CS156b/2023/Xray-diagnosis/img/view1_frontal.jpg")
+    img = read_image("./img/view1_frontal.jpg")
 
     # Step 1: Initialize model with the best available weights
-    weights = ResNet50Weights.DEFAULT
+    weights = ResNet50_Weights.DEFAULT
     model = resnet50(weights=weights)
     model.eval()
 
