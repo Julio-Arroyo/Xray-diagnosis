@@ -1,8 +1,14 @@
-from torchvision.io import read_image
+import matplotlib.image as mpi
 from torchvision.models import resnet50, ResNet50_Weights
+import torch
+import numpy as np
+
 
 if __name__ == "__main__":
-    img = read_image("./img/view1_frontal.jpg")
+    img = mpi.imread("img/view1_frontal.jpg")  # grayscale image shape (d1, d2)
+    img = np.expand_dims(img, axis=0)  # so that it follows format (N, C, d1, d2)
+    img = np.repeat(img, repeats=3, axis=0)  # simulate RGB
+    img = torch.tensor(img)
 
     # Step 1: Initialize model with the best available weights
     weights = ResNet50_Weights.DEFAULT
@@ -20,4 +26,4 @@ if __name__ == "__main__":
     class_id = prediction.argmax().item()
     score = prediction[class_id].item()
     category_name = weights.meta["categories"][class_id]
-    print(f"{category_name}: {100 * score:.1f}%")
+    print(f"the end: {category_name}: {100 * score:.1f}%")
