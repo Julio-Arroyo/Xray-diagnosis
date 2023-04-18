@@ -36,5 +36,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-conda activate base
 python3 /groups/CS156b/2023/Xray-diagnosis/preproc/save_images.py
