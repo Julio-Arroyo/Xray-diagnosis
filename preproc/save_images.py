@@ -15,6 +15,8 @@ NUM_IMAGES = 10
 if __name__ == "__main__":
     df = pd.read_csv(TRAIN_CSV_PATH)
     images = []
+    print("JULITO")
+    assert False
     for idx, row, in df.iterrows():
         if idx % 100 == 0:
             print(f"Idx#{idx}")
