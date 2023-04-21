@@ -9,15 +9,15 @@ ID_COLUMN = "Unnamed: 0"
 PATH_COLUMN = "Path"
 DATA_PATH = "/groups/CS156b/data/"
 TRAIN_CSV_PATH = "/groups/CS156b/data/student_labels/train2023.csv"
-NUM_IMAGES = 10
+NUM_IMAGES = 100
 
 
 if __name__ == "__main__":
+    print("BEGIN SCRIPT")
     df = pd.read_csv(TRAIN_CSV_PATH)
     images = []
     for idx, row, in df.iterrows():
-        if idx % 100 == 0:
-            print(f"Idx#{idx}")
+        print(f"Idx#{idx}")
         if idx >= NUM_IMAGES:
             break
         img = mpi.imread(DATA_PATH + row[PATH_COLUMN])
@@ -32,5 +32,5 @@ if __name__ == "__main__":
     
     print(f"JEFE: {images.shape}")
 
-    with open("/groups/CS156b/2023/Xray-diagnosis/data/first10kimages.npy", "wb") as f:
+    with open(f"/groups/CS156b/2023/Xray-diagnosis/data/first{NUM_IMAGES}images.npy", "wb") as f:
         np.save(f, images)
