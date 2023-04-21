@@ -1,29 +1,111 @@
-import matplotlib.image as mpi
-from torchvision.models import resnet50, ResNet50_Weights
-import torch
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader
+from models.cnn_scalar import CNN
 
 
-if __name__ == "__main__":
-    img = mpi.imread("img/view1_frontal.jpg")  # grayscale image shape (d1, d2)
-    img = np.expand_dims(img, axis=0)  # so that it follows format (N, C, d1, d2)
-    img = np.repeat(img, repeats=3, axis=0)  # simulate RGB
-    img = torch.tensor(img)
+IMAGES_PATH = ""  #TODO
+LABELS_PATH = ""  #TODO
+DISEASE_COL = 0  # 0-th index is no-finding
 
-    # Step 1: Initialize model with the best available weights
-    weights = ResNet50_Weights.DEFAULT
-    model = resnet50(weights=weights)
+# load the numpy array from the specified path
+inputs = np.load(IMAGES_PATH)
+N = inputs.shape[0]
+labels = np.load(LABELS_PATH)[:N, DISEASE_COL]  # keep only one disease
+
+# remove nan labels
+non_NAN_indices = []
+for i in range(N):
+    if (labels[i] == 1 or
+        labels[i] == 0 or
+        labels[i] == -1):
+        non_NAN_indices.append(i)
+non_NAN_indices = np.array(non_NAN_indices, dtype=np.uint8)
+N = len(non_NAN_indices)
+inputs = inputs[non_NAN_indices]
+labels = inputs[non_NAN_indices]
+
+val_size = 0.2
+val_samples = int(val_size * N)
+
+# randomly split the data into training and validation sets
+indices = np.random.permutation(N)
+train_indices, val_indices = indices[val_samples:], indices[:val_samples]
+
+# define the training and validation datasets
+train_dataset = TensorDataset(torch.from_numpy(inputs[train_indices]),
+                              torch.from_numpy(labels[train_indices]))
+val_dataset = TensorDataset(torch.from_numpy(inputs[val_indices]),
+                            torch.from_numpy(labels[val_indices]))
+
+# define the data loaders
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
+
+model = CNN()
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+num_epochs = 10
+train_losses = []
+val_losses = []
+
+# loop over the data for the specified number of epochs
+for epoch in range(num_epochs):
+    # set the running loss to 0
+    running_loss = 0.0
+    
+    # set the model to training mode
+    model.train()
+    
+    # loop over the training data loader
+    for i, data in enumerate(train_loader, 0):
+        # get the inputs and labels from the data loader
+        inputs, labels = data
+        
+        # zero the parameter gradients
+        optimizer.zero_grad()
+        
+        # forward + backward + optimize
+        outputs = model(inputs)
+        loss = torch.sqrt(criterion(outputs, labels))
+        loss.backward()
+        optimizer.step()
+        
+        # add the loss to the running loss
+        running_loss += loss.item()
+        
+        # print statistics every 1000 mini-batches
+        if i % 1000 == 999:
+            print('[%d, %5d] train loss: %.3f' %
+                  (epoch + 1, i + 1, running_loss / 1000))
+            running_loss = 0.0
+    
+    # set the model to evaluation mode
     model.eval()
+    
+    # initialize the validation loss to 0
+    val_loss = 0.0
+    
+    # disable gradient computation for validation
+    with torch.no_grad():
+        # loop over the validation data loader
+        for i, data in enumerate(val_loader, 0):
+            # get the inputs and labels from the data loader
+            inputs, labels = data
+            
+            # forward pass
+            outputs = model(inputs)
+            loss = torch.sqrt(criterion(outputs, labels))
+            
+            # add the loss to the running validation loss
+            val_loss += loss.item()
 
-    # Step 2: Initialize the inference transforms
-    preprocess = weights.transforms()
-
-    # Step 3: Apply inference preprocessing transforms
-    batch = preprocess(img).unsqueeze(0)
-
-    # Step 4: Use the model and print the predicted category
-    prediction = model(batch).squeeze(0).softmax(0)
-    class_id = prediction.argmax().item()
-    score = prediction[class_id].item()
-    category_name = weights.meta["categories"][class_id]
-    print(f"the end: {category_name}: {100 * score:.1f}%")
+    train_losses.append(running_loss)
+    val_losses.append(val_loss)
+            
+    # print statistics every epoch
+    print('[%d] train loss: %.3f, val loss: %.3f' %
+          (epoch + 1, running_loss / len(train_loader), val_loss / len(val_loader)))
