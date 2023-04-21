@@ -36,6 +36,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-conda activate /home/jarroyoi/anaconda3/envs/cs156b
-module load numpy matplotlib pandas
 python3 /groups/CS156b/2023/Xray-diagnosis/preproc/save_images.py
