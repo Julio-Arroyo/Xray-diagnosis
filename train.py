@@ -35,9 +35,9 @@ indices = np.random.permutation(N)
 train_indices, val_indices = indices[val_samples:], indices[:val_samples]
 
 # define the training and validation datasets
-train_dataset = TensorDataset(torch.from_numpy(inputs[train_indices]),
+train_dataset = TensorDataset(torch.from_numpy(inputs[train_indices].astype(np.float64)),
                               torch.from_numpy(labels[train_indices]))
-val_dataset = TensorDataset(torch.from_numpy(inputs[val_indices]),
+val_dataset = TensorDataset(torch.from_numpy(inputs[val_indices].astype(np.float64)),
                             torch.from_numpy(labels[val_indices]))
 
 # define the data loaders
