@@ -15,8 +15,6 @@ NUM_IMAGES = 10
 if __name__ == "__main__":
     df = pd.read_csv(TRAIN_CSV_PATH)
     images = []
-    print("JULITO")
-    assert False
     for idx, row, in df.iterrows():
         if idx % 100 == 0:
             print(f"Idx#{idx}")
@@ -26,6 +24,12 @@ if __name__ == "__main__":
         images.append(img)
 
     images = np.array(images)
+    print(f"bytes1:")
+    print(f"\tsize={images.size}")
+    print(f"\titemsize={images.itemsize}")
+    print(f"\ttotal = {images.size * images.itemsize}")
+    print(f"bytes2={images.nbytes}")
+    
     print(f"JEFE: {images.shape}")
 
     with open("/groups/CS156b/2023/Xray-diagnosis/data/first10kimages.npy", "wb") as f:
