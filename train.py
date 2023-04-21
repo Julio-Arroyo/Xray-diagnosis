@@ -24,7 +24,9 @@ for i in range(N):
         non_NAN_indices.append(i)
 non_NAN_indices = np.array(non_NAN_indices, dtype=np.uint8)
 N = len(non_NAN_indices)
-inputs = inputs[non_NAN_indices]
+
+# format images into correct shape and type
+inputs = np.expand_dims(inputs[non_NAN_indices], axis=1).astype(np.float32)
 labels = inputs[non_NAN_indices]
 
 val_size = 0.2
@@ -35,12 +37,11 @@ indices = np.random.permutation(N)
 train_indices, val_indices = indices[val_samples:], indices[:val_samples]
 
 # define the training and validation datasets
-train_dataset = TensorDataset(torch.from_numpy(inputs[train_indices].astype(np.float64)),
+train_dataset = TensorDataset(torch.from_numpy(inputs[train_indices]),
                               torch.from_numpy(labels[train_indices]))
-val_dataset = TensorDataset(torch.from_numpy(inputs[val_indices].astype(np.float64)),
+val_dataset = TensorDataset(torch.from_numpy(inputs[val_indices]),
                             torch.from_numpy(labels[val_indices]))
 
-# define the data loaders
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
@@ -52,29 +53,22 @@ num_epochs = 10
 train_losses = []
 val_losses = []
 
-# loop over the data for the specified number of epochs
 for epoch in range(num_epochs):
-    # set the running loss to 0
     running_loss = 0.0
     
-    # set the model to training mode
-    model.train()
+    model.train()  # set the model to training mode
     
-    # loop over the training data loader
     for i, data in enumerate(train_loader, 0):
-        # get the inputs and labels from the data loader
         inputs, labels = data
         
-        # zero the parameter gradients
-        optimizer.zero_grad()
+        optimizer.zero_grad()  # zero the parameter gradients
         
         # forward + backward + optimize
         outputs = model(inputs)
-        loss = torch.sqrt(criterion(outputs, labels))
+        loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
         
-        # add the loss to the running loss
         running_loss += loss.item()
         
         # print statistics every 1000 mini-batches
@@ -98,7 +92,7 @@ for epoch in range(num_epochs):
             
             # forward pass
             outputs = model(inputs)
-            loss = torch.sqrt(criterion(outputs, labels))
+            loss = criterion(outputs, labels)
             
             # add the loss to the running validation loss
             val_loss += loss.item()
