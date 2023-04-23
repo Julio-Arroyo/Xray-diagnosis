@@ -70,12 +70,6 @@ for epoch in range(num_epochs):
         optimizer.step()
         
         running_loss += loss.item()
-        
-        # print statistics every 1000 mini-batches
-        if i % 1000 == 999:
-            print('[%d, %5d] train loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 1000))
-            running_loss = 0.0
     
     # set the model to evaluation mode
     model.eval()
