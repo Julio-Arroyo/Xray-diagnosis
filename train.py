@@ -6,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 from models.cnn_scalar import CNN
 
 
-IMAGES_PATH = "/groups/CS156b/2023/Xray-diagnosis/data/first10k.npy"
+IMAGES_PATH = "/groups/CS156b/2023/Xray-diagnosis/data/first60k.npy"
 LABELS_PATH = "/groups/CS156b/2023/Xray-diagnosis/data/train2023_labels.npy"
 DISEASE_COL = 0  # 0-th index is no-finding
 
