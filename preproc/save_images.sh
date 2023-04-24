@@ -13,7 +13,7 @@
 
 # Estimated time this job will take. A job exceeding this time will be killed.
 # Required parameter!
-#SBATCH -t 1:30:00
+#SBATCH -t 12:00:00
 
 # Total number of concurrent srun tasks. Most people will not need this.
 #SBATCH --ntasks=1
