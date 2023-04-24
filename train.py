@@ -64,28 +64,8 @@ val_losses = []
 
 print("begin training loop")
 for epoch in range(num_epochs):
-    running_loss = 0.0
+    model.eval()  # set the model to evaluation mode
     
-    model.train()  # set the model to training mode
-    
-    for i, data in enumerate(train_loader, 0):
-        print(f"juela={i}")
-        inputs, labels = data
-        
-        optimizer.zero_grad()  # zero the parameter gradients
-        
-        # forward + backward + optimize
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
-        
-        running_loss += loss.item()
-    
-    # set the model to evaluation mode
-    model.eval()
-    
-    # initialize the validation loss to 0
     val_loss = 0.0
     
     # disable gradient computation for validation
@@ -101,6 +81,23 @@ for epoch in range(num_epochs):
             
             # add the loss to the running validation loss
             val_loss += loss.item()
+
+    running_loss = 0.0
+    
+    model.train()  # set the model to training mode
+    
+    for i, data in enumerate(train_loader, 0):
+        inputs, labels = data
+        
+        optimizer.zero_grad()  # zero the parameter gradients
+        
+        # forward + backward + optimize
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        
+        running_loss += loss.item()
 
     train_losses.append(running_loss)
     val_losses.append(val_loss)
