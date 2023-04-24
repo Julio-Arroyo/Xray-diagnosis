@@ -5,15 +5,15 @@
 #SBATCH --job-name=julio_train
 
 # Output and error log locations (captures stdout and stderr respectively). Defaults to your homedir.
-#SBATCH --output=/home/jarroyoi/exp1.out
-#SBATCH --error=/home/jarroyoi/exp1.err
+#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/out/%j.out
+#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/out/%j.err
 
 # Account to charge this computation time to. THIS LINE IS ESSENTIAL.
 #SBATCH -A CS156b
 
 # Estimated time this job will take. A job exceeding this time will be killed.
 # Required parameter!
-#SBATCH -t 1:30:00
+#SBATCH -t 12:00:00
 
 # Total number of concurrent srun tasks. Most people will not need this.
 #SBATCH --ntasks=1

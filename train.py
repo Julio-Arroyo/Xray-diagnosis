@@ -10,12 +10,17 @@ IMAGES_PATH = "/groups/CS156b/2023/Xray-diagnosis/data/first10k.npy"
 LABELS_PATH = "/groups/CS156b/2023/Xray-diagnosis/data/train2023_labels.npy"
 DISEASE_COL = 0  # 0-th index is no-finding
 
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"DEVICE: {DEVICE}")
+
 # load the numpy array from the specified path
+print("Loading input array")
 inputs = np.load(IMAGES_PATH)
 N = inputs.shape[0]
 labels = np.load(LABELS_PATH)[:N, DISEASE_COL]  # keep only one disease
 
 # remove nan labels
+print("removing nan labels")
 non_NAN_indices = []
 for i in range(N):
     if (labels[i] == 1 or
@@ -37,15 +42,17 @@ indices = np.random.permutation(N)
 train_indices, val_indices = indices[val_samples:], indices[:val_samples]
 
 # define the training and validation datasets
-train_dataset = TensorDataset(torch.from_numpy(inputs[train_indices]),
-                              torch.from_numpy(labels[train_indices]))
-val_dataset = TensorDataset(torch.from_numpy(inputs[val_indices]),
-                            torch.from_numpy(labels[val_indices]))
+print("defining dataset")
+train_dataset = TensorDataset(torch.from_numpy(inputs[train_indices]).to(DEVICE),
+                              torch.from_numpy(labels[train_indices]).to(DEVICE))
+val_dataset = TensorDataset(torch.from_numpy(inputs[val_indices]).to(DEVICE),
+                            torch.from_numpy(labels[val_indices]).to(DEVICE))
 
+print("Define dataloaders")
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False)
 
-model = CNN()
+model = CNN().to(DEVICE)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -53,6 +60,7 @@ num_epochs = 10
 train_losses = []
 val_losses = []
 
+print("begin training loop")
 for epoch in range(num_epochs):
     running_loss = 0.0
     

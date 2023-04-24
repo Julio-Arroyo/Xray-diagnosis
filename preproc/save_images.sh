@@ -5,8 +5,8 @@
 #SBATCH --job-name=ROSA_compile_dataset
 
 # Output and error log locations (captures stdout and stderr respectively). Defaults to your homedir.
-#SBATCH --output=/home/jarroyoi/%j.out
-#SBATCH --error=/home/jarroyoi/%j.err
+#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/out/save_images_%j.out
+#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/out/save_images_%j.err
 
 # Account to charge this computation time to. THIS LINE IS ESSENTIAL.
 #SBATCH -A CS156b
@@ -23,7 +23,7 @@
 #SBATCH --cpus-per-task=1
 
 # Total amount of system RAM for all tasks. Specify units with M and G. 
-#SBATCH --mem=8G
+#SBATCH --mem=16G
 
 # Request a single Tesla P100 GPU
 #SBATCH --gres=gpu:1
