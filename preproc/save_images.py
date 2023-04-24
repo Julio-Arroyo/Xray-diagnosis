@@ -25,7 +25,7 @@ if __name__ == "__main__":
             break
         img = cv2.imread(DATA_PATH + row[PATH_COLUMN], cv2.IMREAD_UNCHANGED)
         img = cv2.resize(img, (NEW_DIMS, NEW_DIMS))
-        images[idx] = img
+        images[idx - START] = img
 
     print(f"bytes1:")
     print(f"\tsize={images.size}")
