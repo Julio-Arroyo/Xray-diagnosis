@@ -17,7 +17,7 @@ class CNN(nn.Module):
         self.relu3 = nn.ReLU()
         self.pool3 = nn.MaxPool2d(kernel_size=2)
         
-        self.fc1 = nn.Linear(in_features=16 * (16 * 16), out_features=128)
+        self.fc1 = nn.Linear(in_features=16 * (32 * 32), out_features=128)
         self.relu4 = nn.ReLU()
         
         self.fc2 = nn.Linear(in_features=128, out_features=1)
@@ -36,12 +36,13 @@ class CNN(nn.Module):
         x = self.relu3(x)
         x = self.pool3(x)
         
-        x = x.view(-1, 16 * 16 * 16)
+        x = x.view(-1, 16 * 32 * 32)
         
         x = self.fc1(x)
         x = self.relu4(x)
         
         x = self.fc2(x)
         x = self.tanh(x)
+        x = torch.squeeze(x)
         
         return x

@@ -32,7 +32,9 @@ N = len(non_NAN_indices)
 
 # format images into correct shape and type
 inputs = np.expand_dims(inputs[non_NAN_indices], axis=1).astype(np.float32)
-labels = inputs[non_NAN_indices]
+labels = labels[non_NAN_indices].astype(np.float32)
+
+print(f"inputs.shape={inputs.shape}, labels.shape={labels.shape}")
 
 val_size = 0.2
 val_samples = int(val_size * N)
@@ -67,6 +69,7 @@ for epoch in range(num_epochs):
     model.train()  # set the model to training mode
     
     for i, data in enumerate(train_loader, 0):
+        print(f"juela={i}")
         inputs, labels = data
         
         optimizer.zero_grad()  # zero the parameter gradients
