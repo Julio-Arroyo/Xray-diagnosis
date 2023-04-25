@@ -30,16 +30,17 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.inplanes = 64
         self.conv1 = nn.Sequential(
-                        nn.Conv2d(1, 64, kernel_size = 7, stride = 2, padding = 3),
+                        nn.Conv2d(1, 64, kernel_size = 3, stride = 2, padding = 3),
                         nn.BatchNorm2d(64),
                         nn.ReLU())
-        self.maxpool = nn.MaxPool2d(kernel_size = 3, stride = 2, padding = 1)
+        self.maxpool = nn.MaxPool2d(kernel_size = 2, stride = 2, padding = 1)
         self.layer0 = self._make_layer(block, 64, layers[0], stride = 1)
         self.layer1 = self._make_layer(block, 128, layers[1], stride = 2)
         self.layer2 = self._make_layer(block, 256, layers[2], stride = 2)
         self.layer3 = self._make_layer(block, 512, layers[3], stride = 2)
-        self.avgpool = nn.AvgPool2d(7, stride=1)
-        self.fc = nn.Linear(512, num_classes)
+        self.avgpool = nn.AvgPool2d(2, stride=1)
+        self.fc = nn.Linear(32*256, 1)
+        self.tanh = nn.Tanh()
         
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
@@ -67,8 +68,9 @@ class ResNet(nn.Module):
         x = self.layer3(x)
 
         x = self.avgpool(x)
-        x = x.view(x.size(0), -1)
+        x = x.view(x.size(0), 1)
         x = self.fc(x)
+        x = self.tanh(x)
 
         return x
 
