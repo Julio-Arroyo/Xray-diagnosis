@@ -6,7 +6,7 @@
 
 # Output and error log locations (captures stdout and stderr respectively). Defaults to your homedir.
 #SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/opencv_test.out
-#SBATCH --error=/home/jarroyoi/dcgan/out/opencv_test.err
+#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/opencv_test.err
 
 # Account to charge this computation time to. THIS LINE IS ESSENTIAL.
 #SBATCH -A CS156b
