@@ -20,7 +20,7 @@ find_package(Torch REQUIRED)
 include_directories(include)
 
 # add_executable(${PROJECT_NAME} "src/utils/OpenCV_Torch.cpp" "src/train.cpp" )
-add_executable(${PROJECT_NAME} "src/train.cpp")
+add_executable(${PROJECT_NAME} "src/utils.cpp" "src/train.cpp")
 
 # target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${TORCH_LIBRARIES})
 # target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES} TorchVision::TorchVision)

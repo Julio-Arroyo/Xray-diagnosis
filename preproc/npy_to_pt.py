@@ -31,8 +31,8 @@ class DataModule(nn.Module):
         inputs = np.expand_dims(inputs[non_NAN_indices], axis=1).astype(np.int8)
         labels = labels[non_NAN_indices].astype(np.int8)
 
-        self.register_buffer("inputs", torch.tensor(X))
-        self.register_buffer("labels", torch.tensor(Y))
+        self.register_buffer("inputs", torch.tensor(inputs))
+        self.register_buffer("labels", torch.tensor(labels))
 
     def forward(self, dummy):
         return dummy
