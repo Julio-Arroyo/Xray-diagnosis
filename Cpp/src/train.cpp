@@ -25,13 +25,39 @@ int main() {
     torch::optim::Adam optim(model->parameters(), torch::optim::AdamOptions(2e-4)
                                                     .betas(std::make_tuple(0.5, 0.5)));
 
+    // torch::nn::MSELoss criterion(torch::nn::MSELossOptions(torch::enumtype::kSum));
+
     model->to(device);
 
+    // Todo restore from checkpoint
+
     for (int epoch = 1; epoch <= NumEpochs; ++epoch) {
+        double running_loss = 0.0;
+        int batch_index = 0;
         for (torch::data::Example<>& batch : *data_loader) {
-            std::cout << "Batch sizes: " << batch.data.sizes() << std::endl;
-            std::cout << "Labels sizes: " << batch.target.sizes() << std::endl;
-            std::cout << std::endl;
+            std::cout << "batch_index: " << ++batch_index << std::endl;
+
+            torch::Tensor inputs = batch.data;
+            torch::Tensor labels = batch.target;
+
+            std::cout << "inputs options: " << inputs.options() << std::endl;
+            torch::Tensor preds = model->forward(inputs);
+
+            torch::nn::functional::MSELossFuncOptions MSEoptions(torch::kSum);
+            auto loss = torch::nn::functional::mse_loss(preds, labels, MSEoptions);
+            double batch_loss = loss.item<double>();
+            running_loss += batch_loss;
+
+            optim.zero_grad();
+            loss.backward();
+            optim.step();
         }
+
+        std::printf(
+            "\r[Epoch: %2ld/%2ld] Loss: %.4f",
+            epoch,
+            NumEpochs,
+            ++batch_index,
+            running_loss);
     }
 }

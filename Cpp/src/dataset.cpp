@@ -28,5 +28,6 @@ torch::data::Example<> CheXpert::get(size_t index) {
 }
 
 torch::optional<size_t> CheXpert::size() const {
+    std::cout << "in CheXpert::size():" << inputs.sizes()[0] << std::endl;
     return inputs.sizes()[0];  // BUG: not sure this does what I intend it to
 }
