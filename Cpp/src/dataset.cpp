@@ -5,6 +5,9 @@ CheXpert::CheXpert(const std::string &datapath, torch::Device device) {
     DatasetPair data;
     getData(datapath, data);
 
+    data.X.to(device);
+    data.Y.to(device);
+
     std::cout << "Got data" << std::endl;
     std::cout << "- Inputs: " << std::endl;
     std::cout << "    - Sizes: " << data.X.sizes() << std::endl;
@@ -16,9 +19,6 @@ CheXpert::CheXpert(const std::string &datapath, torch::Device device) {
     std::cout << "    - Options: " << data.Y.options() << std::endl;
     std::cout << std::endl;
 
-    data.X.to(device);
-    data.Y.to(device);
-
     inputs = data.X;
     labels = data.Y;
 }
@@ -28,5 +28,5 @@ torch::data::Example<> CheXpert::get(size_t index) {
 }
 
 torch::optional<size_t> CheXpert::size() const {
-    return inputs.size(0);
+    return inputs.sizes()[0];  // BUG: not sure this does what I intend it to
 }

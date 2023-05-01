@@ -27,7 +27,7 @@ int main() {
 
     model->to(device);
 
-    for (int epoch = 1; epoch < NumEpochs; ++epoch) {
+    for (int epoch = 1; epoch <= NumEpochs; ++epoch) {
         for (torch::data::Example<>& batch : *data_loader) {
             std::cout << "Batch sizes: " << batch.data.sizes() << std::endl;
             std::cout << "Labels sizes: " << batch.target.sizes() << std::endl;
