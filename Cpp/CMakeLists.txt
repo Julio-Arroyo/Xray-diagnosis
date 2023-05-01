@@ -15,6 +15,6 @@ find_package(Torch REQUIRED)
 
 include_directories(include)
 
-add_executable(${PROJECT_NAME} "src/utils.cpp" "src/CNN_scalar.cpp" "src/train.cpp")
+add_executable(${PROJECT_NAME} "src/scalarCNN.cpp" "src/utils.cpp" "src/train.cpp")
 
 target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES})

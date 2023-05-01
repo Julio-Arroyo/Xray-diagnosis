@@ -15,9 +15,12 @@ private:
 
     torch::nn::MaxPool2d pool1;
     torch::nn::MaxPool2d pool2;
+    torch::nn::MaxPool2d pool3;
 
     torch::nn::Linear fc1;
     torch::nn::Linear fc2;
+
+    torch::nn::Tanh tanh;
 };
 TORCH_MODULE(ScalarCNN);
 
