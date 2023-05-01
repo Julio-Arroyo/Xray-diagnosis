@@ -1,29 +1,19 @@
 #include "scalarCNN.hpp"
 #include "dataset.hpp"
 
-const std::string DataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/first60k.pt";
+const std::string DataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/PY_first60k.pt";
 const int BatchSize = 64;
 const int NumEpochs = 1;
 
 int main() {
     torch::Device device(torch::kCUDA);
+    std::cout << "Got device: " << device << std::endl;
 
     auto dataset = CheXpert(DataPath, device).map(torch::data::transforms::Stack<>());
 
     std::cout << "dataset.size(): " << dataset.size() << std::endl;
     // torch::Tensor inputs = dataset.X;
     // torch::Tensor labels = dataset.Y;
-
-    // std::cout << "Got dataset" << std::endl;
-    // std::cout << "- Inputs: " << std::endl;
-    // std::cout << "    - Sizes: " << inputs.sizes() << std::endl;
-    // std::cout << "    - Options: " << inputs.options() << std::endl;
-    // std::cout << std::endl;
-
-    // std::cout << "- Labels: " << std::endl;
-    // std::cout << "    - Sizes: " << labels.sizes() << std::endl;
-    // std::cout << "    - Options: " << labels.options() << std::endl;
-    // std::cout << std::endl;
 
     ScalarCNN model;
 
