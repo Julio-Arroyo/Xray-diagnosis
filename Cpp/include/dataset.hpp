@@ -8,7 +8,7 @@ private:
     torch::Tensor inputs, labels;
 
 public:
-    explicit CheXpert(const std::string& datapath, torch::Device device);
+    explicit CheXpert(const std::string& datapath);
     torch::data::Example<> get(size_t index) override;
     torch::optional<size_t> size() const override;
 };

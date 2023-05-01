@@ -3,17 +3,13 @@
 
 const std::string DataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/PY_first60k.pt";
 const int BatchSize = 64;
-const int NumEpochs = 1;
+const int NumEpochs = 10;
 
 int main() {
     torch::Device device(torch::kCUDA);
     std::cout << "Got device: " << device << std::endl;
 
-    auto dataset = CheXpert(DataPath, device).map(torch::data::transforms::Stack<>());
-
-    std::cout << "dataset.size(): " << dataset.size() << std::endl;
-    // torch::Tensor inputs = dataset.X;
-    // torch::Tensor labels = dataset.Y;
+    auto dataset = CheXpert(DataPath).map(torch::data::transforms::Stack<>());
 
     ScalarCNN model;
 
@@ -25,22 +21,16 @@ int main() {
     torch::optim::Adam optim(model->parameters(), torch::optim::AdamOptions(2e-4)
                                                     .betas(std::make_tuple(0.5, 0.5)));
 
-    // torch::nn::MSELoss criterion(torch::nn::MSELossOptions(torch::enumtype::kSum));
-
     model->to(device);
 
     // Todo restore from checkpoint
 
     for (int epoch = 1; epoch <= NumEpochs; ++epoch) {
         double running_loss = 0.0;
-        int batch_index = 0;
         for (torch::data::Example<>& batch : *data_loader) {
-            std::cout << "batch_index: " << ++batch_index << std::endl;
+            torch::Tensor inputs = batch.data.to(device);
+            torch::Tensor labels = batch.target.to(device);
 
-            torch::Tensor inputs = batch.data;
-            torch::Tensor labels = batch.target;
-
-            std::cout << "inputs options: " << inputs.options() << std::endl;
             torch::Tensor preds = model->forward(inputs);
 
             torch::nn::functional::MSELossFuncOptions MSEoptions(torch::kSum);
@@ -57,7 +47,6 @@ int main() {
             "\r[Epoch: %2ld/%2ld] Loss: %.4f",
             epoch,
             NumEpochs,
-            ++batch_index,
-            running_loss);
+            running_loss/59997.0);
     }
 }

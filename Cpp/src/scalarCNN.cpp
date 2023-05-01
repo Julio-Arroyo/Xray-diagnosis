@@ -36,9 +36,7 @@ torch::Tensor ScalarCNNImpl::forward(torch::Tensor x)
     x = torch::nn::functional::relu(x);
     x = pool3(x);
 
-    std::cout << "x before view: " << x.sizes() << std::endl;
     x = x.view({-1, 16*32*32});
-    std::cout << "x after view: " << x.sizes() << std::endl;
 
     x = fc1(x);
     x = torch::nn::functional::relu(x);
