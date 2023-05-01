@@ -5,6 +5,17 @@ CheXpert::CheXpert(const std::string &datapath, torch::Device device) {
     DatasetPair data;
     getData(datapath, data);
 
+    std::cout << "Got data" << std::endl;
+    std::cout << "- Inputs: " << std::endl;
+    std::cout << "    - Sizes: " << data.X.sizes() << std::endl;
+    std::cout << "    - Options: " << data.X.options() << std::endl;
+    std::cout << std::endl;
+
+    std::cout << "- Labels: " << std::endl;
+    std::cout << "    - Sizes: " << data.Y.sizes() << std::endl;
+    std::cout << "    - Options: " << data.Y.options() << std::endl;
+    std::cout << std::endl;
+
     data.X.to(device);
     data.Y.to(device);
 
