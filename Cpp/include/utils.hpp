@@ -11,6 +11,6 @@ struct DatasetPair {
     torch::Tensor Y;
 };
 
-int getInputsLabels(const std::string &dataset_path, DatasetPair &ds);
+int getData(const std::string &dataset_path, DatasetPair &ds);
 
 #endif

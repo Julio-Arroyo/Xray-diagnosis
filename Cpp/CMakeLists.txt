@@ -10,11 +10,12 @@ set(CUDA_INCLUDE_DIRS /software/Modules/modulefiles/libraries/cuda/12.0)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 find_package(Torch REQUIRED)
 
 include_directories(include)
 
-add_executable(${PROJECT_NAME} "src/scalarCNN.cpp" "src/utils.cpp" "src/train.cpp")
+add_executable(${PROJECT_NAME} "src/dataset.cpp" "src/utils.cpp" "src/scalarCNN.cpp" "src/train.cpp")
 
 target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES})

@@ -1,7 +1,10 @@
 #include "utils.hpp"
 
-
-int getInputsLabels(const std::string &dataset_path, DatasetPair &ds) {
+/*
+Populates 'ds' by loading the data from 'dataset_path'.
+Returns 0 on success, or -1 if some error occurs.
+*/
+int getData(const std::string &dataset_path, DatasetPair &ds) {
     torch::jit::script::Module dataset;
     try {
         dataset = torch::jit::load(dataset_path);
