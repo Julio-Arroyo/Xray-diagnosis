@@ -25,4 +25,19 @@ public:
 };
 TORCH_MODULE(ResidualBlock);
 
+class ResNetImpl : public torch::nn::Module {
+private:
+    torch::nn::Conv2d conv1;
+    torch::nn::BatchNorm2d bn1;
+    torch::nn::Sequential stack1, stack2, stack3;
+    torch::nn::AvgPool2d avg_pool;
+    torch::nn::Linear fc;
+    torch::nn::Tanh tanh;
+
+public:
+    ResNetImpl(int nblocks_per_stack, bool skip_connections=false);
+    torch::Tensor forward(torch::Tensor x);
+};
+TORCH_MODULE(ResNet);
+
 #endif
