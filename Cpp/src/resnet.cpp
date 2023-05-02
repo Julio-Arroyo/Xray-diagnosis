@@ -53,7 +53,7 @@ torch::Tensor ResidualBlockImpl::forward(torch::Tensor x) {
 
 /* RESIDUAL NETWORK */
 ResNetImpl::ResNetImpl(int nblocks_per_stack, bool skip_connections) :
-    conv1(torch::nn::Conv2dOptions(3, 16, 3)
+    conv1(torch::nn::Conv2dOptions(1, 16, 3)
                         .stride(1)
                         .padding(1)
                         .bias(false)),
@@ -74,7 +74,7 @@ ResNetImpl::ResNetImpl(int nblocks_per_stack, bool skip_connections) :
         }
 
         
-        stack1->push_back(ResidualBlock(16, stride, skip_connections));
+        stack1->push_back(ResidualBlock(16, 1, skip_connections));
         stack2->push_back(ResidualBlock(32, stride, skip_connections));
         stack3->push_back(ResidualBlock(64, stride, skip_connections));
     }

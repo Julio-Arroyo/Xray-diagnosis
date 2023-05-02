@@ -7,6 +7,11 @@ const std::string TrainDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/P
 const std::string ValDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/PY_first60k_val.pt";
 const int BatchSize = 64;
 const int NumEpochs = 10;
+const int NumResidualBlocksPerStack = 6;
+const bool SkipConnections = false;
+
+// TODO: modify architecture so that it follows form of ResNet34
+// TODO: modify dataset so that it has dimensions 224x224
 
 int main() {
     torch::Device device(torch::kCUDA);
@@ -19,7 +24,7 @@ int main() {
     std::cout << "Dataset sizes train/val: " << TrainSetSize << ", " << ValSetSize << std::endl;
 
     // ScalarCNN model;
-    ResNet model(6, false);
+    ResNet model(NumResidualBlocksPerStack, SkipConnections);
 
     auto train_loader = torch::data::make_data_loader(std::move(train_dataset),
                                                       torch::data::DataLoaderOptions()
