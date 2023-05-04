@@ -1,4 +1,6 @@
-#include <resnet.hpp>
+#include <cassert>
+#include <string>
+#include "resnet.hpp"
 
 /* RESIDUAL BLOCK */
 ResidualBlockImpl::ResidualBlockImpl(int out_channels, int stride, bool skip_connections) :
@@ -52,39 +54,50 @@ torch::Tensor ResidualBlockImpl::forward(torch::Tensor x) {
 }
 
 /* RESIDUAL NETWORK */
-ResNetImpl::ResNetImpl(int nblocks_per_stack, bool skip_connections) :
-    conv1(torch::nn::Conv2dOptions(1, 16, 3)
-                        .stride(1)
+ResNetImpl::ResNetImpl(const std::vector<int> &n_blocks,
+                       const std::vector<int> &n_filters,
+                       bool skip_connections) :
+    conv1(torch::nn::Conv2dOptions(N_INPUT_CHANNELS, CONV1_FILTERS, CONV1_KERNEL)
+                        .stride(CONV1_STRIDE)
                         .padding(1)
                         .bias(false)),
-    bn1(torch::nn::BatchNorm2dOptions(16).track_running_stats(true)),
+    bn1(torch::nn::BatchNorm2dOptions(CONV1_FILTERS).track_running_stats(true)),
+    max_pool(torch::nn::MaxPool2dOptions(MAX_POOL_KERNEL).stride(MAX_POOL_STRIDE)),
 
-    avg_pool(torch::nn::AvgPool2dOptions(8).stride(1)),
-    fc(64, 1),
+    avg_pool(torch::nn::AvgPool2dOptions(AVG_POOL_KERNEL).stride(1)),
+    fc(512, 1),
     tanh()
 {
-    // Build stacks by adding ResidualBlock's
-    for (int i = 0; i < nblocks_per_stack; i++) {
-        // first block of stacks 2 and 3 have downsampling
-        int stride;
-        if (i == 0) {
-            stride = 2;
-        } else {
-            stride = 1;
+    assert(n_blocks.size() == n_filters.size());
+    num_stacks = n_blocks.size();
+
+    for (int i = 0; i < num_stacks; i++) {
+        torch::nn::Sequential curr_stack;
+
+        // Add Residual Blocks
+        for (int j = 0; j < n_blocks[i]; j++) {
+            int stride;
+            if (j == 0 && i > 0) {
+                // first block of each stack (except first stack) has downsampling
+                stride = 2;
+            } else {
+                stride = 1;
+            }
+
+            curr_stack->push_back(ResidualBlock(n_filters[i], stride, skip_connections));
         }
 
-        
-        stack1->push_back(ResidualBlock(16, 1, skip_connections));
-        stack2->push_back(ResidualBlock(32, stride, skip_connections));
-        stack3->push_back(ResidualBlock(64, stride, skip_connections));
+        stacks.push_back(curr_stack);
     }
 
     register_module("conv1", conv1);
     register_module("bn1", bn1);
+    register_module("max_pool", max_pool);
 
-    register_module("stack1", stack1);
-    register_module("stack2", stack2);
-    register_module("stack3", stack3);
+    for (int i = 0; i < num_stacks; i++) {
+        std::string stack_name = "stack" + std::to_string(i+1);
+        register_module(stack_name, stacks[i]);
+    }
 
     register_module("avg_pool", avg_pool);
     register_module("fc", fc);
@@ -92,16 +105,14 @@ ResNetImpl::ResNetImpl(int nblocks_per_stack, bool skip_connections) :
 }
 
 torch::Tensor ResNetImpl::forward(torch::Tensor x) {
-    torch::Tensor out = torch::nn::functional::relu(bn1(conv1(x)));
+    torch::Tensor out = max_pool(torch::nn::functional::relu(bn1(conv1(x))));
 
-    out = stack1->forward(out);
-    out = stack2->forward(out);
-    out = stack3->forward(out);
+    for (int i = 0; i < num_stacks; i++) {
+        out = stacks[i]->forward(out);
+    }
 
     out = avg_pool(out);
-    std::cout << "DEBUG: in ResNet->forward, shape BEFORE view(): " << out.sizes() << std::endl;
     out = out.view({out.size(0), -1});
-    std::cout << "DEBUG: in ResNet->forward, shape AFTER view(): " << out.sizes() << std::endl;
 
     out = tanh(fc(out));
 
