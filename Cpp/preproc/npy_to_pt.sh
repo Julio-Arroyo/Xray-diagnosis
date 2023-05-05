@@ -2,18 +2,18 @@
 # Above line is required!
 
 # Name of job in SLURM queue
-#SBATCH --job-name=ROSA_compile_dataset
+#SBATCH --job-name=test_npy_to_pt
 
 # Output and error log locations (captures stdout and stderr respectively). Defaults to your homedir.
-#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/out/save_images_%j.out
-#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/out/save_images_%j.err
+#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/test_npy_to_pt.out
+#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/test_npy_to_pt.err
 
 # Account to charge this computation time to. THIS LINE IS ESSENTIAL.
 #SBATCH -A CS156b
 
 # Estimated time this job will take. A job exceeding this time will be killed.
 # Required parameter!
-#SBATCH -t 12:00:00
+#SBATCH -t 00:05:00
 
 # Total number of concurrent srun tasks. Most people will not need this.
 #SBATCH --ntasks=1
@@ -36,4 +36,4 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-python3 /groups/CS156b/2023/Xray-diagnosis/preproc/save_images.py
+python3 /groups/CS156b/2023/Xray-diagnosis/Cpp/preproc/npy_to_pt.py
