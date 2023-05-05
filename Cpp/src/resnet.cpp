@@ -65,7 +65,7 @@ ResNetImpl::ResNetImpl(const std::vector<int> &n_blocks,
     max_pool(torch::nn::MaxPool2dOptions(MAX_POOL_KERNEL).stride(MAX_POOL_STRIDE)),
 
     avg_pool(torch::nn::AvgPool2dOptions(AVG_POOL_KERNEL).stride(1)),
-    fc(512, 1),
+    fc(128, 1),
     tanh()
 {
     assert(n_blocks.size() == n_filters.size());
@@ -88,6 +88,13 @@ ResNetImpl::ResNetImpl(const std::vector<int> &n_blocks,
         }
 
         stacks.push_back(curr_stack);
+
+        // // DEBUG
+        // int total_params = 0;
+        // for (const auto &p : curr_stack.parameters()) {
+        //     total_params += p.numel();
+        // }
+        // std::cout << "Stack #" << i << " params = " << total_params << std::endl;
     }
 
     register_module("conv1", conv1);
@@ -105,16 +112,23 @@ ResNetImpl::ResNetImpl(const std::vector<int> &n_blocks,
 }
 
 torch::Tensor ResNetImpl::forward(torch::Tensor x) {
+    std::cout << "FORWARD" << std::endl;
+    std::cout << "INPUT" << x.sizes() << std::endl;
     torch::Tensor out = max_pool(torch::nn::functional::relu(bn1(conv1(x))));
+    std::cout << "AFTER FIRST LAYER" << out.sizes() << std::endl;
 
     for (int i = 0; i < num_stacks; i++) {
         out = stacks[i]->forward(out);
+        std::cout << "AFTER BLOCK" << i+1 << ": " << out.sizes() << std::endl;
     }
 
     out = avg_pool(out);
+    std::cout << "AFTER AVG POOL: " << out.sizes() << std::endl;
     out = out.view({out.size(0), -1});
+    std::cout << "AFTER VIEW: " << out.sizes() << std::endl;
 
     out = tanh(fc(out));
+    std::cout << "AFTER FC: " << out.sizes() << std::endl;
 
     return out;
 }

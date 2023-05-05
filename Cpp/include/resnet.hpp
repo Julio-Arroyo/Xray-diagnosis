@@ -8,7 +8,7 @@
 
 const int N_INPUT_CHANNELS = 1;  // CheXpert is grayscale
 
-const int CONV1_FILTERS = 64;
+const int CONV1_FILTERS = 16;
 const int CONV1_KERNEL = 7;
 const int CONV1_STRIDE = 2;
 

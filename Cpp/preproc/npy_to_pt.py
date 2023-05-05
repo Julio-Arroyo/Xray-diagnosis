@@ -8,20 +8,18 @@ LABELS_PATH = "/groups/CS156b/2023/Xray-diagnosis/data/train2023_labels.npy"
 DISEASE_COL = 0  # 0-th index is no-finding
 SEED = 69
 
-
 class DataModule(nn.Module):
     def __init__(self, phase: str):
         super(DataModule, self).__init__()
 
         np.random.seed(SEED)
 
-        # inputs_part1 = np.load(IMAGES_PREFIX + "part1_allTrain_224x224.npy")
-        # inputs_part2 = np.load(IMAGES_PREFIX + "part2_allTrain_224x224.npy")
-        # inputs_part3 = np.load(IMAGES_PREFIX + "part3_allTrain_224x224.npy")
-        assert inputs_part1.shape == (60000, 224, 224)
-        assert inputs_part2.shape == (59079, 224, 224)
-        assert inputs_part3.shape == (59078, 224, 224)
-        inputs = np.concatenate((inputs_part1, inputs_part2, inputs_part3), axis=0, dtype=np.int8)
+        inputs = np.load(IMAGES_PREFIX + "allTrain_224x224.npy")
+        if not inputs.shape == (178157, 224, 224):
+            print(inputs.shape)
+            assert False
+
+        print(inputs[23459])  # check that it looks reasonable
 
         N = inputs.shape[0]
         labels = np.load(LABELS_PATH)[:N, DISEASE_COL]  # keep only one disease
@@ -36,6 +34,7 @@ class DataModule(nn.Module):
                 non_NAN_indices.append(i)
         non_NAN_indices = np.array(non_NAN_indices, dtype=np.uint8)
         N = len(non_NAN_indices)
+        print(f"There are {N} non-NAN labels")
 
         # format images into correct shape and type
         inputs = np.expand_dims(inputs[non_NAN_indices], axis=1).astype(np.int8)
@@ -64,5 +63,5 @@ if __name__ == "__main__":
     train_dataset = torch.jit.script(DataModule("train"))
     val_dataset = torch.jit.script(DataModule("val"))
 
-    torch.jit.save(train_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/PY_first60k_train.pt")
-    torch.jit.save(val_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/PY_first60k_val.pt")
+    torch.jit.save(train_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_train.pt")
+    torch.jit.save(val_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_val.pt")
