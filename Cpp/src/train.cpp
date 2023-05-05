@@ -9,7 +9,7 @@ const std::string TrainDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/e
 const std::string ValDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_val.pt";
 const int BatchSize = 128;
 const int NumEpochs = 10;
-const int NumResidualBlocksPerStack = 6;
+// const int NumResidualBlocksPerStack = 6;
 const bool SkipConnections = true;
 const int LoggingInterval = 100;  // record loss every LoggingInterval iterations
 const std::string ExperimentName = "First_Resnet18";
@@ -25,12 +25,17 @@ int main() {
 
     // Resnet18
     std::vector<int> n_blocks = {2, 2, 2, 2};
-    std::vector<int> n_filters = {64, 128, 256, 512};
+    std::vector<int> n_filters = {16, 32, 64, 128};
     ResNet model(n_blocks,
                     n_filters,
                     true);
     torch::Tensor x = torch::randn({BatchSize, 1, 224, 224});
     model(x);
+    int total_params = 0;
+    for (const auto &p : model->parameters()) {
+        total_params += p.numel();
+    }
+    std::cout << "TOTAL PARAMETERS:" << total_params << std::endl;
 
     auto train_dataset = CheXpert(TrainDataPath).map(torch::data::transforms::Stack<>());
     auto val_dataset = CheXpert(ValDataPath).map(torch::data::transforms::Stack<>());
@@ -79,14 +84,44 @@ int main() {
     double train_batch_loss = 0;
     double val_batch_loss = 0;
     for (int epoch = 1; epoch <= NumEpochs; ++epoch) {
-        model->train();
+        std::cout << "EPOCH #" << epoch << std::endl;
         for (torch::data::Example<>& batch : *train_loader) {
+            if (((iter % LoggingInterval) == 0)) {
+                model->eval();
+                int n_batches_valset = 0;
+                for (torch::data::Example<>& batch : *val_loader) {
+                    torch::Tensor inputs = batch.data.to(device);
+                    torch::Tensor labels = batch.target.to(device);
+
+                    torch::Tensor preds = model->forward(inputs);
+
+                    auto loss = torch::nn::functional::mse_loss(preds,
+                                                                labels.view({labels.size(0), 1}),
+                                                                MSEoptions);
+                    val_batch_loss += loss.item<double>();
+                    n_batches_valset++;
+                }
+
+                std::printf(
+                    "\r[Iter: %2ld] Train Loss: %.4f | Val Loss: %.4f\n",
+                    iter,
+                    train_batch_loss/LoggingInterval,
+                    val_batch_loss/n_batches_valset);
+                loss_history_file << train_batch_loss/LoggingInterval << "," << val_batch_loss/n_batches_valset << "\n";
+
+                train_batch_loss = 0;
+                val_batch_loss = 0;
+            }
+            
+            model->train();
             torch::Tensor inputs = batch.data.to(device);
             torch::Tensor labels = batch.target.to(device);
 
             torch::Tensor preds = model->forward(inputs);
 
-            auto loss = torch::nn::functional::mse_loss(preds, labels, MSEoptions);
+            auto loss = torch::nn::functional::mse_loss(preds,
+                                                        labels.view({labels.size(0), 1}),
+                                                        MSEoptions);
             train_batch_loss += loss.item<double>();
 
             optim.zero_grad();
@@ -95,33 +130,8 @@ int main() {
             iter++;
         }
 
-        if (iter % LoggingInterval == 0) {
-            model->eval();
-            int n_batches_valset = 0;
-            for (torch::data::Example<>& batch : *val_loader) {
-                torch::Tensor inputs = batch.data.to(device);
-                torch::Tensor labels = batch.target.to(device);
-
-                torch::Tensor preds = model->forward(inputs);
-
-                auto loss = torch::nn::functional::mse_loss(preds, labels, MSEoptions);
-                val_batch_loss += loss.item<double>();
-                n_batches_valset++;
-            }
-
-            std::cout << "DEBUG: n_batches_valset " << n_batches_valset << std::endl;
-            std::printf(
-                "\r[Iter: %2ld] Train Loss: %.4f | Val Loss: %.4f",
-                iter,
-                train_batch_loss/LoggingInterval,
-                val_batch_loss/n_batches_valset);
-            loss_history_file << train_batch_loss/LoggingInterval << ","<< val_batch_loss/n_batches_valset << "\n";
-
-            train_batch_loss = 0;
-            val_batch_loss = 0;
-        }
-
         std::string checkpoint_path = "../weights/resnet18_epoch" + std::to_string(epoch) + ".pt";
         torch::save(model, checkpoint_path);
     }
+    loss_history_file.close();
 }
