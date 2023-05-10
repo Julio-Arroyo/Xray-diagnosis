@@ -38,13 +38,20 @@ class DataModule(nn.Module):
 
         # format images into correct shape and type
         inputs = np.expand_dims(inputs[non_NAN_indices], axis=1).astype(np.int8)
-        labels = labels[non_NAN_indices].astype(np.int8)
+
+        # labels has shape (N,) and each entry is 0, 1, or -1
+        labels = labels[non_NAN_indices].astype(np.int8)  
+        labels_multiclass = np.zeros((N, 3), dtype=np.int8)
+        for i in range(N):
+            # 0 -> 0, 1 -> 1, -1 -> 2
+            labels_multiclass[i, labels[i]] = 1
 
         val_size = 0.2
         val_samples = int(val_size * N)
 
         # randomly split the data into training and validation sets
         indices = np.random.permutation(N)
+        np.save("/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_multiclass_first20val_last80train.npy", indices)
         if phase == 'train':
             print(f"Number of pairs train: {len(indices[val_samples:])}")
             inputs, labels = inputs[indices[val_samples:]], labels[indices[val_samples:]]
@@ -63,5 +70,5 @@ if __name__ == "__main__":
     train_dataset = torch.jit.script(DataModule("train"))
     val_dataset = torch.jit.script(DataModule("val"))
 
-    torch.jit.save(train_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_train.pt")
-    torch.jit.save(val_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_val.pt")
+    torch.jit.save(train_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_train_multiclass.pt")
+    torch.jit.save(val_dataset, "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_val_multiclass.pt")

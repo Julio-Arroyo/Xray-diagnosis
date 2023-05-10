@@ -2,11 +2,11 @@
 # Above line is required!
 
 # Name of job in SLURM queue
-#SBATCH --job-name=npy_to_pt
+#SBATCH --job-name=npy_to_pt_test_set
 
 # Output and error log locations (captures stdout and stderr respectively). Defaults to your homedir.
-#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/npy_to_pt.out
-#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/npy_to_pt.err
+#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/npy_to_pt_test_set.out
+#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/Cpp/out/npy_to_pt_test_set.err
 
 # Account to charge this computation time to. THIS LINE IS ESSENTIAL.
 #SBATCH -A CS156b
@@ -23,7 +23,7 @@
 #SBATCH --cpus-per-task=1
 
 # Total amount of system RAM for all tasks. Specify units with M and G. 
-#SBATCH --mem=128G
+#SBATCH --mem=64G
 
 # Request a single Tesla P100 GPU
 #SBATCH --gres=gpu:1
