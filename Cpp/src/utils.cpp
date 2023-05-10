@@ -19,10 +19,10 @@ int getData(const std::string &dataset_path, DatasetPair &ds) {
         torch::Tensor t = buff.value;
         if (name == "inputs") {
             std::cout << "FOUND INPUTS" << std::endl;
-            ds.X = t.to(torch::kFloat32);
+            ds.X = t;
         } else if (name == "labels") {
             std::cout << "FOUND LABELS" << std::endl;
-            ds.Y = t.to(torch::kFloat32);
+            ds.Y = t;
         }
         std::cout << name << "," << std::endl;
         std::cout << "Sizes: " << t.sizes() << std::endl;
