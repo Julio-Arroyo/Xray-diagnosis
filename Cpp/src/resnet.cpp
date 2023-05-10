@@ -65,8 +65,7 @@ ResNetImpl::ResNetImpl(const std::vector<int> &n_blocks,
     max_pool(torch::nn::MaxPool2dOptions(MAX_POOL_KERNEL).stride(MAX_POOL_STRIDE)),
 
     avg_pool(torch::nn::AvgPool2dOptions(AVG_POOL_KERNEL).stride(1)),
-    fc(128, 1),
-    tanh()
+    fc(LAST_STACK_FILTERS, 3),
 {
     assert(n_blocks.size() == n_filters.size());
     num_stacks = n_blocks.size();
@@ -108,7 +107,6 @@ ResNetImpl::ResNetImpl(const std::vector<int> &n_blocks,
 
     register_module("avg_pool", avg_pool);
     register_module("fc", fc);
-    register_module("tanh", tanh);
 }
 
 torch::Tensor ResNetImpl::forward(torch::Tensor x) {
@@ -121,7 +119,7 @@ torch::Tensor ResNetImpl::forward(torch::Tensor x) {
     out = avg_pool(out);
     out = out.view({out.size(0), -1});
 
-    out = tanh(fc(out));
+    out = fc(out);
 
     return out;
 }

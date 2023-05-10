@@ -1,5 +1,4 @@
 #include "dataset.hpp"
-#include "utils.hpp"
 
 CheXpert::CheXpert(const std::string &datapath) {
     DatasetPair data;

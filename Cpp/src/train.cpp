@@ -5,15 +5,20 @@
 #include "dataset.hpp"
 #include "resnet.hpp"
 
-const std::string TrainDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_train.pt";
-const std::string ValDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_val.pt";
+const std::string TrainDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_train_multiclass.pt";
+const std::string ValDataPath = "/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_val_multiclass.pt";
 const int BatchSize = 128;
 const int NumEpochs = 10;
 // const int NumResidualBlocksPerStack = 6;
 const bool SkipConnections = true;
 const int LoggingInterval = 100;  // record loss every LoggingInterval iterations
-const std::string ExperimentName = "First_Resnet18";
+const std::string ExperimentName = "CustomResnet18_lr1e-4";
 const int NumWorkers = 4;
+
+// double evaluate(ResNet &model, auto &val_loader, const torch::Device &device,
+//                 const int ValSetSize, const double train_loss, const int iter) {
+
+// }
 
 int main() {
     torch::Device device(torch::kCUDA);
@@ -25,10 +30,10 @@ int main() {
 
     // Resnet18
     std::vector<int> n_blocks = {2, 2, 2, 2};
-    std::vector<int> n_filters = {16, 32, 64, 128};
+    std::vector<int> n_filters = {CONV1_FILTERS, 32, 64, LAST_STACK_FILTERS};  // {16, 32, 64, 128};
     ResNet model(n_blocks,
-                    n_filters,
-                    true);
+                 n_filters,
+                 true);
     torch::Tensor x = torch::randn({BatchSize, 1, 224, 224});
     model(x);
     int total_params = 0;
@@ -43,9 +48,6 @@ int main() {
     const int ValSetSize = val_dataset.size().value();
     std::cout << "Dataset sizes train/val: " << TrainSetSize << ", " << ValSetSize << std::endl;
 
-    // ScalarCNN model;
-    // ResNet model(NumResidualBlocksPerStack, SkipConnections);
-
     auto train_loader = torch::data::make_data_loader(std::move(train_dataset),
                                                       torch::data::DataLoaderOptions()
                                                                   .batch_size(BatchSize)
@@ -57,60 +59,60 @@ int main() {
                                                                 .workers(NumWorkers));
   
     torch::optim::Adam optim(model->parameters(),
-                             torch::optim::AdamOptions(2e-4)
-                                            .betas(std::make_tuple(0.5, 0.5)));
+                             torch::optim::AdamOptions(1e-4));
 
     model->to(device);
 
-    torch::nn::functional::MSELossFuncOptions MSEoptions(torch::kMean);
+    // TODO: use cross entropy
+    auto criterion = torch::nn::CrossEntropyLoss();
+    // torch::nn::functional::MSELossFuncOptions MSEoptions(torch::kMean);
 
     // Todo restore from checkpoint
 
-    // model->eval();
-    // double val_loss = 0.0;
-    // for (torch::data::Example<>& batch : *val_loader) {
-    //     torch::Tensor inputs = batch.data.to(device);
-    //     torch::Tensor labels = batch.target.to(device);
-
-    //     torch::Tensor preds = model->forward(inputs);
-
-    //     auto loss = torch::nn::functional::mse_loss(preds, labels, MSEoptions);
-    //     val_loss += loss.item<double>();
-    // }
-    // std::printf("Before training: Val Loss %.4f", val_loss/ValSetSize);
-    // assert(false);
-
     int iter = 0;
-    double train_batch_loss = 0;
-    double val_batch_loss = 0;
+    double train_loss = 0;
+    double best_val_loss = 9999999;
     for (int epoch = 1; epoch <= NumEpochs; ++epoch) {
         std::cout << "EPOCH #" << epoch << std::endl;
         for (torch::data::Example<>& batch : *train_loader) {
             if (((iter % LoggingInterval) == 0)) {
                 model->eval();
-                int n_batches_valset = 0;
+                double val_loss = 0;
+                int num_val_batches = 0;
                 for (torch::data::Example<>& batch : *val_loader) {
                     torch::Tensor inputs = batch.data.to(device);
-                    torch::Tensor labels = batch.target.to(device);
+                    torch::Tensor labels = batch.target.view({labels.size(0), 1}).to(device);
 
                     torch::Tensor preds = model->forward(inputs);
 
-                    auto loss = torch::nn::functional::mse_loss(preds,
-                                                                labels.view({labels.size(0), 1}),
-                                                                MSEoptions);
-                    val_batch_loss += loss.item<double>();
-                    n_batches_valset++;
+                    // // Round preds
+                    // torch::Tensor pos_preds = torch::where(preds >= 0.5, 1, 0);
+                    // torch::Tensor neg_preds = torch::where(preds <= -0.5, -1, 0);
+                    // torch::Tensor rounded_preds = pos_preds + neg_preds;
+
+                    auto loss = criterion(preds, labels);
+                    val_loss += loss.item<double>();
+                    num_val_batches++;
                 }
+
+                train_loss = train_loss / LoggingInterval;
+                val_loss = val_loss / num_val_batches;
 
                 std::printf(
                     "\r[Iter: %2ld] Train Loss: %.4f | Val Loss: %.4f\n",
                     iter,
-                    train_batch_loss/LoggingInterval,
-                    val_batch_loss/n_batches_valset);
-                loss_history_file << train_batch_loss/LoggingInterval << "," << val_batch_loss/n_batches_valset << "\n";
+                    train_loss,
+                    val_loss);
+                loss_history_file << train_loss << "," << val_loss << "\n";
 
-                train_batch_loss = 0;
-                val_batch_loss = 0;
+                if (val_loss < best_val_loss) {
+                    best_val_loss = val_loss;
+                    std::cout << "New best at epoch " << epoch << " and iter " << iter << std::endl;
+                    std::string checkpoint_path = "../weights/" + ExperimentName + "_best_val.pt";
+                    torch::save(model, checkpoint_path);
+                }
+
+                train_loss = 0; // reset
             }
             
             model->train();
@@ -122,7 +124,7 @@ int main() {
             auto loss = torch::nn::functional::mse_loss(preds,
                                                         labels.view({labels.size(0), 1}),
                                                         MSEoptions);
-            train_batch_loss += loss.item<double>();
+            train_loss += ((loss.item<double>()) * inputs.size(0));
 
             optim.zero_grad();
             loss.backward();
@@ -130,7 +132,7 @@ int main() {
             iter++;
         }
 
-        std::string checkpoint_path = "../weights/resnet18_epoch" + std::to_string(epoch) + ".pt";
+        std::string checkpoint_path = "../weights/" + ExperimentName + "_epoch" + std::to_string(epoch) + ".pt";
         torch::save(model, checkpoint_path);
     }
     loss_history_file.close();

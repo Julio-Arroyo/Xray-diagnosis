@@ -2,6 +2,7 @@
 #define DATASET_HPP
 
 #include <torch/torch.h>
+#include "utils.hpp"
 
 class CheXpert : public torch::data::datasets::Dataset<CheXpert> {
 private:

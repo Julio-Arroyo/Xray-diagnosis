@@ -18,6 +18,9 @@ const int MAX_POOL_STRIDE = 2;
 // last stack's output is 7x7, so avg_pool turns it into 1x1
 const int AVG_POOL_KERNEL = 7;
 
+const int LAST_STACK_FILTERS = 128;
+const int N_CLASSES = 3;  // 3 classes: positive, negative, uncertain
+
 /*
     Implements a 2-layer residual block (Fig. 2)
 */
@@ -58,7 +61,6 @@ private:
 
     torch::nn::AvgPool2d avg_pool;
     torch::nn::Linear fc;
-    torch::nn::Tanh tanh;
 
 public:
     ResNetImpl(const std::vector<int> &n_blocks,   // n_blocks[i] = # residual blocks in i-th stack
