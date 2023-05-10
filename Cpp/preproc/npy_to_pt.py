@@ -59,8 +59,10 @@ class DataModule(nn.Module):
         elif phase == 'val':
             print(f"Number of pairs val: {len(indices[:val_samples])}")
             inputs, labels_multiclass = (inputs[indices[:val_samples]],
-                                         labels[indices[:val_samples]])
+                                         labels_multiclass[indices[:val_samples]])
 
+        print(f"inputs shape: {inputs.shape}")
+        print(f"labels shape: {labels_multiclass.shape}")
         self.register_buffer("inputs", torch.tensor(inputs))
         self.register_buffer("labels", torch.tensor(labels_multiclass))
 
