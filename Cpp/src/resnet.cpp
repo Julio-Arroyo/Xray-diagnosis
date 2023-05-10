@@ -65,7 +65,7 @@ ResNetImpl::ResNetImpl(const std::vector<int> &n_blocks,
     max_pool(torch::nn::MaxPool2dOptions(MAX_POOL_KERNEL).stride(MAX_POOL_STRIDE)),
 
     avg_pool(torch::nn::AvgPool2dOptions(AVG_POOL_KERNEL).stride(1)),
-    fc(LAST_STACK_FILTERS, 3),
+    fc(LAST_STACK_FILTERS, N_CLASSES)
 {
     assert(n_blocks.size() == n_filters.size());
     num_stacks = n_blocks.size();
