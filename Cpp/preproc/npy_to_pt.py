@@ -54,13 +54,15 @@ class DataModule(nn.Module):
         np.save("/groups/CS156b/2023/Xray-diagnosis/Cpp/data/entire_multiclass_first20val_last80train.npy", indices)
         if phase == 'train':
             print(f"Number of pairs train: {len(indices[val_samples:])}")
-            inputs, labels = inputs[indices[val_samples:]], labels[indices[val_samples:]]
+            inputs, labels_multiclass = (inputs[indices[val_samples:]],
+                                         labels_multiclass[indices[val_samples:]])
         elif phase == 'val':
             print(f"Number of pairs val: {len(indices[:val_samples])}")
-            inputs, labels = inputs[indices[:val_samples]], labels[indices[:val_samples]]
+            inputs, labels_multiclass = (inputs[indices[:val_samples]],
+                                         labels[indices[:val_samples]])
 
         self.register_buffer("inputs", torch.tensor(inputs))
-        self.register_buffer("labels", torch.tensor(labels))
+        self.register_buffer("labels", torch.tensor(labels_multiclass))
 
     def forward(self, dummy):
         return dummy
