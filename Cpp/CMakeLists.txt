@@ -19,9 +19,6 @@ find_package(Torch REQUIRED)
 
 include_directories(include)
 
-# For train.cpp
-add_executable(${PROJECT_NAME} "src/dataset.cpp" "src/utils.cpp" "src/resnet.cpp" "src/train.cpp")
-# For test.cpp
-# add_executable(${PROJECT_NAME} "src/resnet.cpp" "src/test.cpp")
+add_executable(${PROJECT_NAME} "src/dataset.cpp" "src/utils.cpp" "src/resnet.cpp" "src/${PROJECT_NAME}.cpp")
 
 target_link_libraries(${PROJECT_NAME} ${TORCH_LIBRARIES})
