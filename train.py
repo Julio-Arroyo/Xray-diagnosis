@@ -105,3 +105,6 @@ for epoch in range(num_epochs):
     # print statistics every epoch
     print('[%d] train loss: %.3f, val loss: %.3f' %
           (epoch + 1, running_loss / len(train_loader), val_loss / len(val_loader)))
+
+torch.save(model.state_dict(), "/groups/CS156b/2023/Xray-diagnosis-rosa1/Xray-diagnosis/models/cnn_scalar_weights.pt")
+

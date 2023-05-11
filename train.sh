@@ -2,11 +2,11 @@
 # Above line is required!
 
 # Name of job in SLURM queue
-#SBATCH --job-name=julio_train
+#SBATCH --job-name=eli_train
 
 # Output and error log locations (captures stdout and stderr respectively). Defaults to your homedir.
-#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis/out/julio_train_%j.out
-#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis/out/julio_train_%j.err
+#SBATCH --output=/groups/CS156b/2023/Xray-diagnosis-rosa1/Xray-diagnosis/out/eli_train.out
+#SBATCH --error=/groups/CS156b/2023/Xray-diagnosis-rosa1/Xray-diagnosis/out/eli_train.err
 
 # Account to charge this computation time to. THIS LINE IS ESSENTIAL.
 #SBATCH -A CS156b
@@ -23,17 +23,17 @@
 #SBATCH --cpus-per-task=1
 
 # Total amount of system RAM for all tasks. Specify units with M and G. 
-#SBATCH --mem=16G
+#SBATCH --mem=128G
 
 # Request a single Tesla P100 GPU
 #SBATCH --gres=gpu:1
 
 # Send status emails to an email
-#SBATCH --mail-user=jarroyoi@caltech.edu
+#SBATCH --mail-user=eseiner@caltech.edu
 
 # Enable email notifications for changes to the job state
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 
-python3 /groups/CS156b/2023/Xray-diagnosis/train.py
+python3 /groups/CS156b/2023/Xray-diagnosis-rosa1/Xray-diagnosis/train.py

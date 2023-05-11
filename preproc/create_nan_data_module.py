@@ -47,4 +47,4 @@ class DataModule(nn.Module):
 
 if __name__ == "__main__":
     pseudo_train_dataset = torch.jit.script(DataModule("pseudo_train"))
-    torch.jit.save(pseudo_train_dataset, f"/groups/CS156b/2023/Xray-diagnosis/Cpp/data/NANs_for_idx{DISEASE_COL}.pt")
+    torch.jit.save(pseudo_train_dataset, f"/groups/CS156b/2023/Xray-diagnosis-rosa1/Xray-diagnosis/data/NANs_for_idx{DISEASE_COL}.pt")
