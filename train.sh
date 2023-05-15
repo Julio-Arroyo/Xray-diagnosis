@@ -23,7 +23,7 @@
 #SBATCH --cpus-per-task=1
 
 # Total amount of system RAM for all tasks. Specify units with M and G. 
-#SBATCH --mem=16G
+#SBATCH --mem=128G
 
 # Request a single Tesla P100 GPU
 #SBATCH --gres=gpu:1
