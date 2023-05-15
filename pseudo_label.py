@@ -1,12 +1,12 @@
-import numpy as np
 import torch
+import numpy as np
 import torch.nn as nn
 from torchvision import transforms
 from torch.utils.data.sampler import SubsetRandomSampler
 import gc
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
-from resnet import ResNet, ResidualBlock
+from models.cnn_scalar import CNN
 
 
 
@@ -23,9 +23,9 @@ print(f"DEVICE: {DEVICE}")
 
 # load the numpy array from the specified path
 print("Loading input array")
-inputs = np.load(IMAGES_PATH)
+inputs = np.load(HPC_PATH+IMAGES_PATH)
 N = inputs.shape[0]
-labels = np.load(LABELS_PATH)[:N, DISEASE_COL]  # keep only one disease
+labels = np.load(HPC_PATH+LABELS_PATH)[:N, DISEASE_COL]  # keep only one disease
 
 # remove nan labels
 print("removing nan labels")
@@ -43,10 +43,12 @@ NAN_indices = np.array(NAN_indices, dtype=np.uint8)
 N = len(non_NAN_indices)
 
 # format images into correct shape and type
-inputs = np.expand_dims(inputs[non_NAN_indices], axis=1).astype(np.float32)
-nan_inputs = np.expand_dims(inputs[NAN_indices], axis=1).astype(np.float32)
+# nan_inputs = inputs[non_NAN_indices].astype(np.float32)
+non_expanded_inputs = np.copy(inputs)
+inputs = np.expand_dims(non_expanded_inputs[non_NAN_indices], axis=1).astype(np.float32)
+nan_inputs = np.expand_dims(non_expanded_inputs[NAN_indices], axis=1).astype(np.float32)
+all_labels = np.copy(labels) #used for predicting pseudolabels
 labels = labels[non_NAN_indices].astype(np.float32)
-print(labels.shape)
 
 print(f"inputs.shape={inputs.shape}, labels.shape={labels.shape}")
 
@@ -69,68 +71,138 @@ print("Define dataloaders")
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
-print(val_loader)
 
-num_classes = 3
 num_epochs = 20
 batch_size = 16
 learning_rate = 0.01
 
-model = ResNet(ResidualBlock, [1, 4, 6, 3]).to(DEVICE)
+model = CNN().to(DEVICE)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-# Loss and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay = 0.001, momentum = 0.9)  
+num_epochs = 10
+train_losses = []
+val_losses = []
 
-# Train the model
-total_step = len(train_loader)
-
-
+print("begin training loop")
 for epoch in range(num_epochs):
-    for i, (images, labels) in enumerate(train_loader):  
-        # Move tensors to the configured device
-        images = images.to(DEVICE)
-        labels = labels.to(DEVICE)
+    model.eval()  # set the model to evaluation mode
+    
+    val_loss = 0.0
+    
+    # disable gradient computation for validation
+    with torch.no_grad():
+        # loop over the validation data loader
+        for i, data in enumerate(val_loader, 0):
+            # get the inputs and labels from the data loader
+            inputs, labels = data
+            
+            # forward pass
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            
+            # add the loss to the running validation loss
+            val_loss += loss.item()
+
+    running_loss = 0.0
+    
+    model.train()  # set the model to training mode
+    
+    for i, data in enumerate(train_loader, 0):
+        inputs, labels = data
         
-        # Forward pass
-        outputs = model(images)
+        optimizer.zero_grad()  # zero the parameter gradients
+        
+        # forward + backward + optimize
+        outputs = model(inputs)
         loss = criterion(outputs, labels)
-        
-        # Backward and optimize
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        del images, labels, outputs
-        torch.cuda.empty_cache()
-        gc.collect()
+        
+        running_loss += loss.item()
 
-    print ('Epoch [{}/{}], Loss: {:.4f}' 
-                   .format(epoch+1, num_epochs, loss.item()))
-    # Validation
-    with torch.no_grad():
-        correct = 0
-        total = 0
-        for images, labels in val_loader:
-            images = images.to(DEVICE)
-            labels = labels.to(DEVICE)
-            outputs = model(images)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-            del images, labels, outputs
-    
-        print('Accuracy of the network on the {} validation images: {} %'.format(5000, 100 * correct / total)) 
+    train_losses.append(running_loss)
+    val_losses.append(val_loss)
+            
+    # print statistics every epoch
+    print('[%d] train loss: %.3f, val loss: %.3f' %
+          (epoch + 1, running_loss / len(train_loader), val_loss / len(val_loader)))
+    # torch.save(model.state_dict(), ".pt")
 
+
+print('Finished Training')
+# Predict the NaN labels using the trained model
+model.eval()
+pseudo_labels = None
 with torch.no_grad():
-    correct = 0
-    total = 0
-    for images, labels in test_loader:
-        images = images.to(DEVICE)
-        labels = labels.to(DEVICE)
-        outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
-        # total += labels.size(0)
-        # correct += (predicted == labels).sum().item()
-        # del images, labels, outputs
+    for i, data in enumerate(test_loader, 0):
+        inputs = data[0]
+        outputs = model(inputs)
+        pseudo_labels = outputs
+all_labels[NAN_indices] = pseudo_labels.numpy()
+non_val_indices = np.delete(np.arange(N), val_indices)
+pseudo_training_inputs = np.expand_dims(non_expanded_inputs[non_val_indices], axis=1).astype(np.float32)
+#remove val_indices from all_inputs
+pseudo_dataset = TensorDataset(torch.from_numpy(pseudo_training_inputs).to(DEVICE),
+                              torch.from_numpy(all_labels[non_val_indices].astype(np.float32)).to(DEVICE))
 
-    print('Accuracy of the network on the {} test images: {} %'.format(10000, 100 * correct / total))   
+pseudo_loader = DataLoader(pseudo_dataset, batch_size=16, shuffle=False)
+
+
+print("Created Pseudo Dataset")
+pseudo_train_losses = []
+pseudo_val_losses = []
+
+print("begin training loop on pseudo data")
+for epoch in range(num_epochs):
+    model.eval()  # set the model to evaluation mode
+    
+    pseudo_val_loss = 0.0
+    
+    # disable gradient computation for validation
+    with torch.no_grad():
+        # loop over the validation data loader
+        for i, data in enumerate(val_loader, 0):
+            # get the inputs and labels from the data loader
+            inputs, labels = data
+            
+            # forward pass
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            
+            # add the loss to the running validation loss
+            pseudo_val_loss += loss.item()
+
+    pseudo_running_loss = 0.0
+    
+    model.train()  # set the model to training mode
+    
+    for i, data in enumerate(pseudo_loader, 0):
+        inputs, labels = data
+        
+        optimizer.zero_grad()  # zero the parameter gradients
+        
+        # forward + backward + optimize
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        
+        pseudo_running_loss += loss.item()
+
+    pseudo_train_losses.append(pseudo_running_loss)
+    pseudo_val_losses.append(pseudo_val_loss)
+            
+    # print statistics every epoch
+    print('[%d] train loss: %.3f, val loss: %.3f' %
+          (epoch + 1, pseudo_running_loss / len(pseudo_loader), pseudo_val_loss / len(val_loader)))
+
+
+
+
+
+
+
+
+
+
